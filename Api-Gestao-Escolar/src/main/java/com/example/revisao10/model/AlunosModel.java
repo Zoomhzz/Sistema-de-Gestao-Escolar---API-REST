@@ -5,16 +5,20 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "Tab_alunos")
 public class AlunosModel {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false,length = 200)
+
+    @Column(nullable = false, length = 200)
     private String nome;
 
-    @Column(nullable = false, unique = true)
+    // CORREÇÃO: Removido o unique = true
+    @Column(nullable = false)
     private String turno;
 
-    @Column(nullable = false)
+    // MELHORIA: Adicionado o unique = true (não podem existir duas matrículas iguais)
+    @Column(nullable = false, unique = true)
     private String matricula;
 
     @Column(nullable = false)
@@ -31,43 +35,18 @@ public class AlunosModel {
         this.turma = turma;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public String getNome() {
-        return nome;
-    }
+    public String getTurno() { return turno; }
+    public void setTurno(String turno) { this.turno = turno; }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    public String getMatricula() { return matricula; }
+    public void setMatricula(String matricula) { this.matricula = matricula; }
 
-    public String getTurno() {
-        return turno;
-    }
-
-    public void setTurno(String turno) {
-        this.turno = turno;
-    }
-
-    public String getMatricula() {
-        return matricula;
-    }
-
-    public void setMatricula(String matricula) {
-        this.matricula = matricula;
-    }
-
-    public String getTurma() {
-        return turma;
-    }
-
-    public void setTurma(String turma) {
-        this.turma = turma;
-    }
+    public String getTurma() { return turma; }
+    public void setTurma(String turma) { this.turma = turma; }
 }

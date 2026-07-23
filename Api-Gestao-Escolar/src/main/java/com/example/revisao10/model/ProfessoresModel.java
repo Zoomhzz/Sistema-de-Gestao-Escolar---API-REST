@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "tab_pro")
 public class ProfessoresModel {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -12,7 +13,8 @@ public class ProfessoresModel {
     @Column(nullable = false, length = 200)
     private String nome;
 
-    @Column(nullable = false,unique = true)
+    // CORREÇÃO: Removido o unique = true
+    @Column(nullable = false)
     private String turno;
 
     @Column(nullable = false)
@@ -32,43 +34,18 @@ public class ProfessoresModel {
         this.salario = salario;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public String getNome() {
-        return nome;
-    }
+    public String getTurno() { return turno; }
+    public void setTurno(String turno) { this.turno = turno; }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    public String getMateria() { return materia; }
+    public void setMateria(String materia) { this.materia = materia; }
 
-    public String getTurno() {
-        return turno;
-    }
-
-    public void setTurno(String turno) {
-        this.turno = turno;
-    }
-
-    public String getMateria() {
-        return materia;
-    }
-
-    public void setMateria(String materia) {
-        this.materia = materia;
-    }
-
-    public double getSalario() {
-        return salario;
-    }
-
-    public void setSalario(double salario) {
-        this.salario = salario;
-    }
+    public double getSalario() { return salario; }
+    public void setSalario(double salario) { this.salario = salario; }
 }
