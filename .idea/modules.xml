@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Sistema-de-Gestao-Escolar---API-REST.iml" filepath="$PROJECT_DIR$/.idea/Sistema-de-Gestao-Escolar---API-REST.iml" />
+      <module fileurl="file://$PROJECT_DIR$/revisao10/revisao10.iml" filepath="$PROJECT_DIR$/revisao10/revisao10.iml" />
     </modules>
   </component>
 </project>
