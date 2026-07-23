@@ -12,6 +12,7 @@ import java.util.List;
 
 @Service
 public class AlunosService {
+
     @Autowired
     private AlunosRepository repository;
 
@@ -23,11 +24,11 @@ public class AlunosService {
                 .findAll()
                 .stream()
                 .map(f -> new AlunosResponseDTO(
+                        f.getId(), // <-- ID adicionado aqui
                         f.getNome(),
                         f.getMatricula(),
-                        f.getTurma()))
+                        f.getTurno())) // <-- Corrigido de getTurma() para getTurno()
                 .toList();
-
     }
 
     public AlunosResponseDTO salvarAluno(AlunosRequestDTO dto) {
@@ -39,17 +40,18 @@ public class AlunosService {
         novoAluno.setNome(dto.getNome());
         novoAluno.setMatricula(dto.getMatricula());
         novoAluno.setTurma(dto.getTurma());
+        novoAluno.setTurno(dto.getTurno()); // <-- Faltava salvar o turno no banco!
 
-        String senhaCripografada = passwordEncoder.encode(dto.getMatricula());
-        novoAluno.setMatricula(senhaCripografada);
+        String senhaCriptografada = passwordEncoder.encode(dto.getMatricula());
+        novoAluno.setMatricula(senhaCriptografada); // Nota: Você está substituindo a matrícula pela senha criptografada. Cuidado com isso no login!
 
         repository.save(novoAluno);
 
         return new AlunosResponseDTO(
+                novoAluno.getId(), // <-- ID adicionado aqui
                 novoAluno.getNome(),
                 novoAluno.getMatricula(),
-                novoAluno.getTurma()
+                novoAluno.getTurno() // <-- Corrigido de getTurma() para getTurno()
         );
     }
-
 }

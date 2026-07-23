@@ -24,6 +24,7 @@ public class ProfessoresService {
                 .findAll()
                 .stream()
                 .map(p -> new ProfessoresResponseDTO(
+                        p.getId(), // <-- ID adicionado aqui
                         p.getNome(),
                         p.getTurno(),
                         p.getMateria()))
@@ -46,6 +47,7 @@ public class ProfessoresService {
         repository.save(novoProfessor);
 
         return new ProfessoresResponseDTO(
+                novoProfessor.getId(), // <-- ID adicionado aqui
                 novoProfessor.getNome(),
                 novoProfessor.getTurno(),
                 novoProfessor.getMateria()
