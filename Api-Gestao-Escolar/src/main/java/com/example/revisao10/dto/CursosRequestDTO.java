@@ -1,7 +1,6 @@
 package com.example.revisao10.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public class CursosRequestDTO {
 
