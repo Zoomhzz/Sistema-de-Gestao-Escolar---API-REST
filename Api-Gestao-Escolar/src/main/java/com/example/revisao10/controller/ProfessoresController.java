@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/professor")
+@RequestMapping("/professores")
+@CrossOrigin("*")
 public class ProfessoresController {
 
     @Autowired
