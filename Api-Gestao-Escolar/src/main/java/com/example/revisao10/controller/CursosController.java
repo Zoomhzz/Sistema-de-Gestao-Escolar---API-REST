@@ -18,20 +18,32 @@ import java.util.Map;
 public class CursosController {
 
     @Autowired
-    private CursosService service;
+    private CursosService cursosService;
 
     @GetMapping
     public ResponseEntity<List<CursosResponseDTO>> listar() {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(service.listarTodos());
+        return ResponseEntity.ok(cursosService.listarTodos());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CursosResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(cursosService.buscarPorId(id));
     }
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> salvar(@Valid @RequestBody CursosRequestDTO dto) {
-        service.salvarCurso(dto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(Map.of("Mensagem", "Curso cadastrado com sucesso"));
+                .body(cursosService.salvarCurso(dto));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> atualizar(@PathVariable Long id, @Valid @RequestBody CursosRequestDTO dto) {
+        return ResponseEntity.ok(cursosService.atualizar(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deletar(@PathVariable Long id) {
+        return ResponseEntity.ok(cursosService.deletar(id));
     }
 }

@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface CursosRepository extends JpaRepository<CursosModel, Long> {
-    Optional<CursosModel> findByMateria (String materia);
+    Optional<CursosModel> findByNome(String nome);
 }

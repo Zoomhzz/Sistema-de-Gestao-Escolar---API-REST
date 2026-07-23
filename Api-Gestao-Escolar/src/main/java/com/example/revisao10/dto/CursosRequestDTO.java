@@ -2,43 +2,48 @@ package com.example.revisao10.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 
 public class CursosRequestDTO {
+
     @NotBlank(message = "O nome do curso é obrigatório")
-    @Size(max = 200)
     private String nome;
 
-    @NotBlank(message = "A matéria é obrigatória")
-    private String materia;
+    @NotBlank(message = "A carga horária é obrigatória")
+    private String cargaHoraria;
 
-    @NotNull(message = "O número de alunos é obrigatório")
-    @Positive(message = "O número de alunos deve ser maior que zero")
-    private Integer n_alunos;
-
-    @NotBlank(message = "O nome do professor é obrigatório")
-    private String professor;
+    @NotBlank(message = "A área é obrigatória")
+    private String area;
 
     public CursosRequestDTO() {
     }
 
-    public CursosRequestDTO(String nome, String materia, Integer n_alunos, String professor) {
+    public CursosRequestDTO(String nome, String cargaHoraria, String area) {
         this.nome = nome;
-        this.materia = materia;
-        this.n_alunos = n_alunos;
-        this.professor = professor;
+        this.cargaHoraria = cargaHoraria;
+        this.area = area;
     }
 
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
+    public String getNome() {
+        return nome;
+    }
 
-    public String getMateria() { return materia; }
-    public void setMateria(String materia) { this.materia = materia; }
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
 
-    public Integer getN_alunos() { return n_alunos; }
-    public void setN_alunos(Integer n_alunos) { this.n_alunos = n_alunos; }
+    public String getCargaHoraria() {
+        return cargaHoraria;
+    }
 
-    public String getProfessor() { return professor; }
-    public void setProfessor(String professor) { this.professor = professor; }
+    public void setCargaHoraria(String cargaHoraria) {
+        this.cargaHoraria = cargaHoraria;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
 }

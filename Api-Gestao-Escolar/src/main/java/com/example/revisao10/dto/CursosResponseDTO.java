@@ -1,28 +1,51 @@
 package com.example.revisao10.dto;
 
 public class CursosResponseDTO {
-    private Long id; // É comum retornar o ID no response para facilitar edições posteriores
+
+    private Long id;
     private String nome;
-    private String materia;
-    private String professor;
+    private String cargaHoraria;
+    private String area;
 
     public CursosResponseDTO() {
     }
 
-    public CursosResponseDTO(Long id, String nome, String materia, String professor) {
+    public CursosResponseDTO(Long id, String nome, String cargaHoraria, String area) {
         this.id = id;
         this.nome = nome;
-        this.materia = materia;
-        this.professor = professor;
+        this.cargaHoraria = cargaHoraria;
+        this.area = area;
     }
 
+    public Long getId() {
+        return id;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    public String getMateria() { return materia; }
-    public void setMateria(String materia) { this.materia = materia; }
-    public String getProfessor() { return professor; }
-    public void setProfessor(String professor) { this.professor = professor; }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getCargaHoraria() {
+        return cargaHoraria;
+    }
+
+    public void setCargaHoraria(String cargaHoraria) {
+        this.cargaHoraria = cargaHoraria;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
 }
