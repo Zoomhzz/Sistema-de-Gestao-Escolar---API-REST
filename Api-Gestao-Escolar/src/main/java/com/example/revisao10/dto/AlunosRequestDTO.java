@@ -8,8 +8,8 @@ public class AlunosRequestDTO {
     @Size(max = 200, message = "O nome deve ter menos de 200 caracteres")
     private String nome;
 
-    @NotBlank(message = "A matrícula é obrigatoria")
-    @Size(min = 10, max = 13, message = "A matricula é obrigatoria")
+    @NotBlank(message = "A matrícula é obrigatória")
+    @Size(min = 5, max = 13, message = "A matrícula deve ter entre 5 e 13 caracteres")
     private String matricula;
 
     @NotBlank(message = "O numero da turma é obrigatorio")

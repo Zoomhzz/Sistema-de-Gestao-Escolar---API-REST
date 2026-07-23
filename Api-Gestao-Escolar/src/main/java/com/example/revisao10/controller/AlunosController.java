@@ -21,17 +21,40 @@ public class AlunosController {
     private AlunosService service;
 
     @GetMapping
-    public ResponseEntity<List<AlunosResponseDTO>> listar (){
+    public ResponseEntity<List<AlunosResponseDTO>> listar() {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(service.listarTodos());
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> salvar(@Valid @RequestBody AlunosRequestDTO dto){
+    public ResponseEntity<Map<String, Object>> salvar(@Valid @RequestBody AlunosRequestDTO dto) {
         service.salvarAluno(dto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(Map.of("Mensagem","Aluno cadastrado com sucesso")); // Corrigido de Funcionário para Aluno
+                .body(Map.of("Mensagem", "Aluno cadastrado com sucesso"));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AlunosResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(service.buscarPorId(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deletar(@PathVariable Long id) {
+        Map<String, Object> resposta = service.deletar(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(resposta);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> atualizar(@PathVariable Long id, @Valid @RequestBody AlunosRequestDTO dto) {
+        Map<String, Object> resposta = service.atualizar(id, dto);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(resposta);
     }
 }
