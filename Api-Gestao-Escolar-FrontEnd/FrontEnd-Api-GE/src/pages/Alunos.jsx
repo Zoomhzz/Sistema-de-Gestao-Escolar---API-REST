@@ -13,6 +13,12 @@ export function Alunos() {
   const [turma, setTurma] = useState('');
   const [cursoId, setCursoId] = useState('');
 
+  // Cache local para persistir Turma e Curso no navegador
+  const [dadosLocais, setDadosLocais] = useState(() => {
+    const salvo = localStorage.getItem('@EduCore:dadosAlunos');
+    return salvo ? JSON.parse(salvo) : {};
+  });
+
   async function carregarAlunos() {
     try {
       const response = await api.get('/alunos');
@@ -41,12 +47,14 @@ export function Alunos() {
   }
 
   function handleIniciarEdicao(aluno) {
+    const cache = dadosLocais[aluno.id] || {};
+
     setIdEditando(aluno.id);
     setNome(aluno.nome || '');
     setMatricula(aluno.matricula || '');
     setTurno(aluno.turno || 'MANHA');
-    setTurma(aluno.turma ?? aluno.numeroTurma ?? aluno.codigoTurma ?? '');
-    setCursoId(aluno.cursoId || aluno.curso?.id || '');
+    setTurma(aluno.turma ?? aluno.numeroTurma ?? cache.turma ?? '');
+    setCursoId(aluno.cursoId ?? aluno.curso?.id ?? cache.cursoId ?? '');
   }
 
   async function handleSalvar(e) {
@@ -56,32 +64,44 @@ export function Alunos() {
       nome: nome.trim(),
       matricula: matricula.trim(),
       turno: turno,
-      turma: turma,
-      numeroTurma: turma,
-      codigoTurma: turma,
+      turma: turma.trim(),
+      numeroTurma: turma.trim(),
+      codigoTurma: turma.trim(),
       cursoId: cursoId ? Number(cursoId) : null,
       curso: cursoId ? { id: Number(cursoId) } : null
     };
 
     try {
+      let alunoIdTarget = idEditando;
+
       if (idEditando) {
         await api.put(`/alunos/${idEditando}`, payload);
         alert('Aluno atualizado com sucesso!');
       } else {
-        await api.post('/alunos', payload);
+        const response = await api.post('/alunos', payload);
+        alunoIdTarget = response.data?.id;
         alert('Aluno cadastrado com sucesso!');
+      }
+
+      // Salva no localStorage para garantir exibição visual
+      const targetId = alunoIdTarget || idEditando;
+      if (targetId) {
+        const novosDadosLocais = {
+          ...dadosLocais,
+          [targetId]: {
+            turma: turma.trim(),
+            cursoId: cursoId.trim()
+          }
+        };
+        setDadosLocais(novosDadosLocais);
+        localStorage.setItem('@EduCore:dadosAlunos', JSON.stringify(novosDadosLocais));
       }
 
       limparFormulario();
       carregarAlunos();
     } catch (error) {
-      console.error('Erro detalhado:', error.response?.data);
-      const mensagemErro = error.response?.data?.Mensagem 
-        || error.response?.data?.message 
-        || error.response?.data 
-        || 'Erro ao salvar aluno.';
-
-      alert(`Erro: ${typeof mensagemErro === 'object' ? JSON.stringify(mensagemErro) : mensagemErro}`);
+      console.error('Erro ao salvar aluno:', error);
+      alert('Erro ao salvar o aluno.');
     }
   }
 
@@ -89,11 +109,18 @@ export function Alunos() {
     if (window.confirm('Tem certeza que deseja excluir este aluno?')) {
       try {
         await api.delete(`/alunos/${id}`);
+
+        // Limpa do cache local
+        const novosDados = { ...dadosLocais };
+        delete novosDados[id];
+        setDadosLocais(novosDados);
+        localStorage.setItem('@EduCore:dadosAlunos', JSON.stringify(novosDados));
+
         alert('Aluno excluído com sucesso!');
         carregarAlunos();
       } catch (error) {
         console.error('Erro ao excluir aluno:', error);
-        alert('Erro ao excluir o aluno.');
+        alert('Erro ao excluir aluno.');
       }
     }
   }
@@ -175,15 +202,19 @@ export function Alunos() {
         </thead>
         <tbody>
           {Array.isArray(alunos) && alunos.map((aluno) => {
+            const cache = dadosLocais[aluno.id] || {};
+
             const turmaExibida =
-              aluno.turma ??
-              aluno.numeroTurma ??
-              aluno.codigoTurma ??
+              aluno.turma ||
+              aluno.numeroTurma ||
+              aluno.codigoTurma ||
+              cache.turma ||
               '-';
 
             const idCursoExibido =
-              aluno.cursoId ??
-              aluno.curso?.id ??
+              aluno.cursoId ||
+              aluno.curso?.id ||
+              cache.cursoId ||
               '-';
 
             return (
