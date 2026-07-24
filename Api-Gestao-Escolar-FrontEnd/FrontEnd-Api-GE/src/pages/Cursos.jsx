@@ -7,15 +7,14 @@ export function Cursos() {
   const [professores, setProfessores] = useState([]);
   const [idEditando, setIdEditando] = useState(null);
 
-  // Estados dos Campos do Formulário
+  // Estados dos Campos
   const [nome, setNome] = useState('');
-  const [materia, setMateria] = useState('');
+  const [materiaInput, setMateriaInput] = useState('');
   const [area, setArea] = useState('');
   const [cargaHoraria, setCargaHoraria] = useState('');
   const [numeroAlunos, setNumeroAlunos] = useState('0');
   const [professorId, setProfessorId] = useState('');
 
-  // 1. Carrega Cursos
   async function carregarCursos() {
     try {
       const response = await api.get('/cursos');
@@ -23,7 +22,6 @@ export function Cursos() {
         ? response.data
         : (response.data?.content || []);
 
-      console.log('Dados de Cursos recebidos:', dados);
       setCursos(dados);
     } catch (error) {
       console.error('Erro ao buscar cursos:', error);
@@ -31,7 +29,6 @@ export function Cursos() {
     }
   }
 
-  // 2. Carrega Professores
   async function carregarProfessores() {
     try {
       const response = await api.get('/professores');
@@ -54,7 +51,7 @@ export function Cursos() {
   function limparFormulario() {
     setIdEditando(null);
     setNome('');
-    setMateria('');
+    setMateriaInput('');
     setArea('');
     setCargaHoraria('');
     setNumeroAlunos('0');
@@ -64,11 +61,17 @@ export function Cursos() {
   function handleIniciarEdicao(curso) {
     setIdEditando(curso.id);
     setNome(curso.nome || '');
-    setMateria(curso.materia || curso.disciplina || curso.nomeMateria || '');
     setArea(curso.area || '');
     setCargaHoraria(curso.cargaHoraria ? String(curso.cargaHoraria) : '');
     setNumeroAlunos(String(curso.numeroAlunos ?? curso.qtdAlunos ?? curso.alunosCount ?? 0));
-    setProfessorId(curso.professor?.id || curso.professorId || '');
+    
+    // Tenta pegar o ID do professor ou do objeto professor
+    const idProf = curso.professor?.id || curso.professorId || '';
+    setProfessorId(String(idProf));
+
+    // Se houver matéria no curso ou no professor
+    const mat = curso.materia || curso.disciplina || curso.professor?.materia || '';
+    setMateriaInput(mat);
   }
 
   async function handleSalvar(e) {
@@ -76,19 +79,22 @@ export function Cursos() {
 
     const qtdAlunos = Number(numeroAlunos) || 0;
     const horas = Number(cargaHoraria) || 0;
+    const profIdNum = professorId ? Number(professorId) : null;
 
-    // Envia todas as variações de chaves comuns no Spring Boot
+    // Se um professor foi selecionado, podemos pegar a matéria dele
+    const profSelecionado = professores.find(p => p.id === profIdNum);
+    const materiaFinal = materiaInput.trim() || profSelecionado?.materia || '';
+
     const payload = {
       nome: nome.trim(),
-      materia: materia.trim(),
-      disciplina: materia.trim(),
-      nomeMateria: materia.trim(),
+      materia: materiaFinal,
+      disciplina: materiaFinal,
       area: area.trim(),
       cargaHoraria: horas,
       numeroAlunos: qtdAlunos,
       alunosCount: qtdAlunos,
-      professorId: professorId ? Number(professorId) : null,
-      professor: professorId ? { id: Number(professorId) } : null
+      professorId: profIdNum,
+      professor: profIdNum ? { id: profIdNum } : null
     };
 
     try {
@@ -130,7 +136,6 @@ export function Cursos() {
     <div className="container" style={{ padding: '20px' }}>
       <h2>📚 Gestão de Cursos</h2>
 
-      {/* Formulário de Cadastro / Edição */}
       <form onSubmit={handleSalvar} className="form-card" style={{ marginBottom: '30px' }}>
         <h3>{idEditando ? '✏️ Editar Curso' : '➕ Novo Curso'}</h3>
 
@@ -146,9 +151,8 @@ export function Cursos() {
           <input
             type="text"
             placeholder="Matéria / Disciplina"
-            value={materia}
-            onChange={(e) => setMateria(e.target.value)}
-            required
+            value={materiaInput}
+            onChange={(e) => setMateriaInput(e.target.value)}
           />
 
           <input
@@ -175,11 +179,11 @@ export function Cursos() {
             required
           />
 
-          <select value={professorId} onChange={(e) => setProfessorId(e.target.value)}>
+          <select value={professorId} onChange={(e) => setProfessorId(e.target.value)} required>
             <option value="">Selecione um Professor...</option>
             {professores.map((prof) => (
               <option key={prof.id} value={prof.id}>
-                {prof.nome} - {prof.materia || 'Geral'}
+                {prof.nome} ({prof.materia || 'Sem Matéria'})
               </option>
             ))}
           </select>
@@ -201,7 +205,6 @@ export function Cursos() {
         </div>
       </form>
 
-      {/* Tabela de Exibição */}
       <table>
         <thead>
           <tr>
@@ -217,26 +220,25 @@ export function Cursos() {
         </thead>
         <tbody>
           {Array.isArray(cursos) && cursos.map((curso) => {
-            // Mapeamento extensivo para capturar qualquer nome retornado pelo backend
-            const materiaExibida =
-              curso.materia ||
-              curso.disciplina ||
-              curso.nomeMateria ||
-              curso.materiaNome ||
-              '-';
-
+            // Busca o nome do professor
             const nomeProfessor =
               curso.professor?.nome ||
               curso.nomeProfessor ||
-              curso.professorNome ||
-              (typeof curso.professor === 'string' ? curso.professor : null) ||
+              professores.find(p => p.id === curso.professorId || p.id === curso.professor?.id)?.nome ||
+              '-';
+
+            // Busca a matéria (no curso ou no objeto do professor)
+            const materiaExibida =
+              curso.materia ||
+              curso.disciplina ||
+              curso.professor?.materia ||
+              professores.find(p => p.id === curso.professorId || p.id === curso.professor?.id)?.materia ||
               '-';
 
             const qtdAlunosExibida =
               curso.numeroAlunos ??
               curso.qtdAlunos ??
               curso.alunosCount ??
-              curso.alunos?.length ??
               0;
 
             return (
