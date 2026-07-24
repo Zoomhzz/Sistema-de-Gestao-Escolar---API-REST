@@ -6,7 +6,7 @@ export function Professores() {
   const [professores, setProfessores] = useState([]);
   const [nome, setNome] = useState('');
   const [materia, setMateria] = useState('');
-  const [alunos, setAlunos] = useState('');
+  const [alunos, setAlunos] = useState('0'); // Inicializa como '0' em vez de string vazia
 
   async function carregarProfessores() {
     try {
@@ -28,31 +28,38 @@ export function Professores() {
 
   async function handleCadastrar(e) {
     e.preventDefault();
+
+    // Garante que o valor convertido seja SEMPRE um número válido (double/number)
+    const valorNum = Number(alunos);
+    const qtdAlunos = isNaN(valorNum) ? 0 : valorNum;
+
+    const payload = {
+      nome: nome.trim(),
+      materia: materia.trim(),
+      numeroAlunos: qtdAlunos,
+      alunosCount: qtdAlunos
+    };
+
     try {
-      await api.post('/professores', {
-        nome,
-        materia,
-        numeroAlunos: Number(alunos) || 0
-      });
+      await api.post('/professores', payload);
       setNome('');
       setMateria('');
-      setAlunos('');
+      setAlunos('0');
       carregarProfessores();
       alert('Professor cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro detalhado:', error.response?.data);
-      
-      const mensagemErro = error.response?.data?.message 
+      const mensagemErro = error.response?.data?.Mensagem 
+        || error.response?.data?.message 
         || error.response?.data 
-        || 'Conflito de dados no servidor.';
+        || 'Erro ao cadastrar no servidor.';
 
-      alert(`Erro 409 (Conflito): ${typeof mensagemErro === 'object' ? JSON.stringify(mensagemErro) : mensagemErro}`);
+      alert(`Erro no cadastro: ${typeof mensagemErro === 'object' ? JSON.stringify(mensagemErro) : mensagemErro}`);
     }
   }
 
   return (
     <div className="professores-layout">
-      {/* Formulário de Cadastro */}
       <div className="container" style={{ flex: 1 }}>
         <h2>👨‍🏫 Gestão de Professores</h2>
 
@@ -80,13 +87,13 @@ export function Professores() {
             placeholder="Qtd. de Alunos"
             value={alunos}
             onChange={(e) => setAlunos(e.target.value)}
+            required
           />
 
           <button type="submit">Cadastrar</button>
         </form>
       </div>
 
-      {/* Sidebar estilo Twitch */}
       <aside className="twitch-sidebar">
         <div className="twitch-header">
           <span>Professores em aula</span>
@@ -112,7 +119,7 @@ export function Professores() {
 
               <div className="twitch-viewers">
                 <span className="red-dot">🔴</span>
-                <span>{prof.numeroAlunos || prof.alunosCount || Math.floor(Math.random() * 50) + 10}</span>
+                <span>{prof.numeroAlunos ?? prof.alunosCount ?? 0}</span>
               </div>
             </li>
           ))}
