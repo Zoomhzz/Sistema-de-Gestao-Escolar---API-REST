@@ -7,7 +7,8 @@ export function Professores() {
   const [nome, setNome] = useState('');
   const [materia, setMateria] = useState('');
   const [alunos, setAlunos] = useState('0');
-  const [turno, setTurno] = useState('Manhã');
+  const [turno, setTurno] = useState('MANHA');
+  const [salario, setSalario] = useState('');
 
   async function carregarProfessores() {
     try {
@@ -30,15 +31,17 @@ export function Professores() {
   async function handleCadastrar(e) {
     e.preventDefault();
 
-    const valorNum = Number(alunos);
-    const qtdAlunos = isNaN(valorNum) ? 0 : valorNum;
+    const valorNumAlunos = Number(alunos);
+    const qtdAlunos = isNaN(valorNumAlunos) ? 0 : valorNumAlunos;
 
-    // Payload ajustado conforme as regras do Spring Validation (@Positive e @NotBlank)
+    const valorNumSalario = Number(salario);
+    const valorSalario = isNaN(valorNumSalario) || valorNumSalario <= 0 ? 1000 : valorNumSalario;
+
     const payload = {
       nome: nome.trim(),
       materia: materia.trim(),
-      turno: turno,                  // Fix: atende 'O turno é obrigatório'
-      salario: 1000.0,              // Fix: atende 'O salário deve ser um valor positivo'
+      turno: turno,
+      salario: valorSalario,
       numeroAlunos: qtdAlunos,
       alunosCount: qtdAlunos
     };
@@ -48,7 +51,8 @@ export function Professores() {
       setNome('');
       setMateria('');
       setAlunos('0');
-      setTurno('Manhã');
+      setTurno('MANHA');
+      setSalario('');
       carregarProfessores();
       alert('Professor cadastrado com sucesso!');
     } catch (error) {
@@ -88,11 +92,20 @@ export function Professores() {
           />
 
           <select value={turno} onChange={(e) => setTurno(e.target.value)} required>
-            <option value="Manhã">Manhã</option>
-            <option value="Tarde">Tarde</option>
-            <option value="Noite">Noite</option>
-            <option value="Integral">Integral</option>
+            <option value="MANHA">Manhã</option>
+            <option value="TARDE">Tarde</option>
+            <option value="NOITE">Noite</option>
+            <option value="INTEGRAL">Integral</option>
           </select>
+
+          <input
+            type="number"
+            step="0.01"
+            placeholder="Salário (R$)"
+            value={salario}
+            onChange={(e) => setSalario(e.target.value)}
+            required
+          />
 
           <input
             type="number"
