@@ -7,6 +7,7 @@ export function Professores() {
   const [nome, setNome] = useState('');
   const [materia, setMateria] = useState('');
   const [alunos, setAlunos] = useState('0');
+  const [turno, setTurno] = useState('Manhã');
 
   async function carregarProfessores() {
     try {
@@ -32,16 +33,14 @@ export function Professores() {
     const valorNum = Number(alunos);
     const qtdAlunos = isNaN(valorNum) ? 0 : valorNum;
 
-    // Payload com fallbacks numéricos para cobrir tipos primitivos 'double' no Spring
+    // Payload ajustado conforme as regras do Spring Validation (@Positive e @NotBlank)
     const payload = {
       nome: nome.trim(),
       materia: materia.trim(),
+      turno: turno,                  // Fix: atende 'O turno é obrigatório'
+      salario: 1000.0,              // Fix: atende 'O salário deve ser um valor positivo'
       numeroAlunos: qtdAlunos,
-      alunosCount: qtdAlunos,
-      salario: 0.0,
-      cargaHoraria: 0.0,
-      horas: 0.0,
-      avaliacao: 0.0
+      alunosCount: qtdAlunos
     };
 
     try {
@@ -49,6 +48,7 @@ export function Professores() {
       setNome('');
       setMateria('');
       setAlunos('0');
+      setTurno('Manhã');
       carregarProfessores();
       alert('Professor cadastrado com sucesso!');
     } catch (error) {
@@ -86,6 +86,13 @@ export function Professores() {
             onChange={(e) => setMateria(e.target.value)}
             required
           />
+
+          <select value={turno} onChange={(e) => setTurno(e.target.value)} required>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
+            <option value="Integral">Integral</option>
+          </select>
 
           <input
             type="number"
