@@ -4,6 +4,8 @@ import './Professores.css';
 
 export function Professores() {
   const [professores, setProfessores] = useState([]);
+  const [idEditando, setIdEditando] = useState(null);
+
   const [nome, setNome] = useState('');
   const [materia, setMateria] = useState('');
   const [alunos, setAlunos] = useState('0');
@@ -28,7 +30,25 @@ export function Professores() {
     carregarProfessores();
   }, []);
 
-  async function handleCadastrar(e) {
+  function limparFormulario() {
+    setIdEditando(null);
+    setNome('');
+    setMateria('');
+    setAlunos('0');
+    setTurno('MANHA');
+    setSalario('');
+  }
+
+  function handleIniciarEdicao(prof) {
+    setIdEditando(prof.id);
+    setNome(prof.nome || '');
+    setMateria(prof.materia || '');
+    setTurno(prof.turno || 'MANHA');
+    setSalario(prof.salario ? String(prof.salario) : '');
+    setAlunos(String(prof.numeroAlunos ?? prof.alunosCount ?? 0));
+  }
+
+  async function handleSalvar(e) {
     e.preventDefault();
 
     const valorNumAlunos = Number(alunos);
@@ -47,33 +67,48 @@ export function Professores() {
     };
 
     try {
-      await api.post('/professores', payload);
-      setNome('');
-      setMateria('');
-      setAlunos('0');
-      setTurno('MANHA');
-      setSalario('');
+      if (idEditando) {
+        await api.put(`/professores/${idEditando}`, payload);
+        alert('Professor atualizado com sucesso!');
+      } else {
+        await api.post('/professores', payload);
+        alert('Professor cadastrado com sucesso!');
+      }
+
+      limparFormulario();
       carregarProfessores();
-      alert('Professor cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro detalhado:', error.response?.data);
       const mensagemErro = error.response?.data?.Mensagem 
         || error.response?.data?.message 
         || error.response?.data 
-        || 'Erro ao cadastrar no servidor.';
+        || 'Erro ao salvar no servidor.';
 
-      alert(`Erro no cadastro: ${typeof mensagemErro === 'object' ? JSON.stringify(mensagemErro) : mensagemErro}`);
+      alert(`Erro: ${typeof mensagemErro === 'object' ? JSON.stringify(mensagemErro) : mensagemErro}`);
+    }
+  }
+
+  async function handleExcluir(id) {
+    if (window.confirm('Tem certeza que deseja apagar este professor?')) {
+      try {
+        await api.delete(`/professores/${id}`);
+        alert('Professor excluído com sucesso!');
+        carregarProfessores();
+      } catch (error) {
+        console.error('Erro ao excluir professor:', error);
+        alert('Erro ao excluir o professor.');
+      }
     }
   }
 
   return (
     <div className="professores-layout">
-      {/* Formulário de Cadastro */}
       <div className="container" style={{ flex: 1 }}>
         <h2>👨‍🏫 Gestão de Professores</h2>
 
-        <form onSubmit={handleCadastrar} className="form-card">
-          <h3>Novo Professor</h3>
+        {/* Formulário de Cadastro / Edição */}
+        <form onSubmit={handleSalvar} className="form-card">
+          <h3>{idEditando ? '✏️ Editar Professor' : '➕ Novo Professor'}</h3>
 
           <input
             type="text"
@@ -115,8 +150,62 @@ export function Professores() {
             required
           />
 
-          <button type="submit">Cadastrar</button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button type="submit">
+              {idEditando ? 'Atualizar' : 'Cadastrar'}
+            </button>
+            {idEditando && (
+              <button
+                type="button"
+                onClick={limparFormulario}
+                style={{ backgroundColor: '#7f8c8d', color: '#fff' }}
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
         </form>
+
+        {/* Tabela de Professores */}
+        <table style={{ marginTop: '20px' }}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Matéria</th>
+              <th>Turno</th>
+              <th>Salário</th>
+              <th>Nº Alunos</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.isArray(professores) && professores.map((prof) => (
+              <tr key={prof.id}>
+                <td>{prof.id}</td>
+                <td>{prof.nome}</td>
+                <td>{prof.materia}</td>
+                <td>{prof.turno || '-'}</td>
+                <td>{prof.salario ? `R$ ${prof.salario.toFixed(2)}` : '-'}</td>
+                <td>{prof.numeroAlunos ?? prof.alunosCount ?? 0}</td>
+                <td style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => handleIniciarEdicao(prof)}
+                    style={{ backgroundColor: '#f39c12', color: '#fff' }}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleExcluir(prof.id)}
+                    style={{ backgroundColor: '#e74c3c', color: '#fff' }}
+                  >
+                    Excluir
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Sidebar estilo Twitch */}
