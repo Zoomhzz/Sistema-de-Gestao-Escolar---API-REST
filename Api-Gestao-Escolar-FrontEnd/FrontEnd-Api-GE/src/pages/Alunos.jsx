@@ -1,24 +1,26 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import './Alunos.css';
+import './Alunos.css'; // Ajuste o nome do CSS se necessário
 
 export function Alunos() {
   const [alunos, setAlunos] = useState([]);
   const [idEditando, setIdEditando] = useState(null);
 
+  // Estados dos Campos
   const [nome, setNome] = useState('');
   const [matricula, setMatricula] = useState('');
-  const [turno, setTurno] = useState('Manhã');
+  const [turno, setTurno] = useState('MANHA');
   const [turma, setTurma] = useState('');
   const [cursoId, setCursoId] = useState('');
 
   async function carregarAlunos() {
     try {
       const response = await api.get('/alunos');
-      const dados = Array.isArray(response.data) 
-        ? response.data 
+      const dados = Array.isArray(response.data)
+        ? response.data
         : (response.data?.content || []);
 
+      console.log('Dados de Alunos recebidos:', dados); // Para depuração no F12
       setAlunos(dados);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
@@ -34,7 +36,7 @@ export function Alunos() {
     setIdEditando(null);
     setNome('');
     setMatricula('');
-    setTurno('Manhã');
+    setTurno('MANHA');
     setTurma('');
     setCursoId('');
   }
@@ -43,20 +45,24 @@ export function Alunos() {
     setIdEditando(aluno.id);
     setNome(aluno.nome || '');
     setMatricula(aluno.matricula || '');
-    setTurno(aluno.turno || 'Manhã');
-    setTurma(aluno.turma || '');
-    setCursoId(aluno.cursoId ? String(aluno.cursoId) : '');
+    setTurno(aluno.turno || 'MANHA');
+    setTurma(aluno.turma ?? aluno.numeroTurma ?? aluno.codigoTurma ?? '');
+    setCursoId(aluno.cursoId || aluno.curso?.id || '');
   }
 
   async function handleSalvar(e) {
     e.preventDefault();
 
     const payload = {
-      nome,
-      matricula,
-      turno,
-      turma,
-      cursoId: cursoId ? Number(cursoId) : null
+      nome: nome.trim(),
+      matricula: matricula.trim(),
+      turno: turno,
+      // Mapeia variações comuns que a API pode exigir
+      turma: turma,
+      numeroTurma: turma,
+      codigoTurma: turma,
+      cursoId: cursoId ? Number(cursoId) : null,
+      curso: cursoId ? { id: Number(cursoId) } : null
     };
 
     try {
@@ -71,13 +77,18 @@ export function Alunos() {
       limparFormulario();
       carregarAlunos();
     } catch (error) {
-      console.error('Erro ao salvar aluno:', error.response?.data || error.message);
-      alert(`Erro: ${JSON.stringify(error.response?.data || 'Erro na requisição')}`);
+      console.error('Erro detalhado:', error.response?.data);
+      const mensagemErro = error.response?.data?.Mensagem 
+        || error.response?.data?.message 
+        || error.response?.data 
+        || 'Erro ao salvar aluno.';
+
+      alert(`Erro: ${typeof mensagemErro === 'object' ? JSON.stringify(mensagemErro) : mensagemErro}`);
     }
   }
 
   async function handleExcluir(id) {
-    if (window.confirm('Tem certeza que deseja apagar este aluno?')) {
+    if (window.confirm('Tem certeza que deseja excluir este aluno?')) {
       try {
         await api.delete(`/alunos/${id}`);
         alert('Aluno excluído com sucesso!');
@@ -90,51 +101,54 @@ export function Alunos() {
   }
 
   return (
-    <div className="container">
+    <div className="container" style={{ padding: '20px' }}>
       <h2>🎓 Gestão de Alunos</h2>
 
-      <form onSubmit={handleSalvar} className="form-card">
+      {/* Formulário de Cadastro / Edição */}
+      <form onSubmit={handleSalvar} className="form-card" style={{ marginBottom: '20px' }}>
         <h3>{idEditando ? '✏️ Editar Aluno' : '➕ Novo Aluno'}</h3>
 
-        <input
-          type="text"
-          placeholder="Nome do Aluno"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          required
-        />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+          <input
+            type="text"
+            placeholder="Nome do Aluno"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            required
+          />
 
-        <input
-          type="text"
-          placeholder="Matricular"
-          value={matricula}
-          onChange={(e) => setMatricula(e.target.value)}
-          required
-        />
+          <input
+            type="text"
+            placeholder="Matrícula"
+            value={matricula}
+            onChange={(e) => setMatricula(e.target.value)}
+            required
+          />
 
-        <select value={turno} onChange={(e) => setTurno(e.target.value)} required>
-          <option value="Manhã">Manhã</option>
-          <option value="Tarde">Tarde</option>
-          <option value="Noite">Noite</option>
-          <option value="Integral">Integral</option>
-        </select>
+          <select value={turno} onChange={(e) => setTurno(e.target.value)} required>
+            <option value="MANHA">Manhã</option>
+            <option value="TARDE">Tarde</option>
+            <option value="NOITE">Noite</option>
+            <option value="INTEGRAL">Integral</option>
+          </select>
 
-        <input
-          type="text"
-          placeholder="Número da Turma"
-          value={turma}
-          onChange={(e) => setTurma(e.target.value)}
-          required
-        />
+          <input
+            type="text"
+            placeholder="Número da Turma"
+            value={turma}
+            onChange={(e) => setTurma(e.target.value)}
+            required
+          />
 
-        <input
-          type="number"
-          placeholder="ID do Curso (Opcional)"
-          value={cursoId}
-          onChange={(e) => setCursoId(e.target.value)}
-        />
+          <input
+            type="number"
+            placeholder="ID do Curso (Opcional)"
+            value={cursoId}
+            onChange={(e) => setCursoId(e.target.value)}
+          />
+        </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
           <button type="submit">
             {idEditando ? 'Atualizar' : 'Cadastrar'}
           </button>
@@ -150,43 +164,60 @@ export function Alunos() {
         </div>
       </form>
 
+      {/* Tabela de Alunos */}
       <table>
         <thead>
           <tr>
             <th>ID</th>
-            <th>Nome</th>
-            <th>Matrícula</th>
-            <th>Turno</th>
-            <th>Turma</th>
-            <th>ID Curso</th>
-            <th>Ações</th>
+            <th>NOME</th>
+            <th>MATRÍCULA</th>
+            <th>TURNO</th>
+            <th>TURMA</th>
+            <th>ID CURSO</th>
+            <th>AÇÕES</th>
           </tr>
         </thead>
         <tbody>
-          {Array.isArray(alunos) && alunos.map((aluno) => (
-            <tr key={aluno.id}>
-              <td>{aluno.id}</td>
-              <td>{aluno.nome}</td>
-              <td>{aluno.matricula}</td>
-              <td>{aluno.turno || '-'}</td>
-              <td>{aluno.turma || '-'}</td>
-              <td>{aluno.cursoId || '-'}</td>
-              <td style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => handleIniciarEdicao(aluno)}
-                  style={{ backgroundColor: '#f39c12', color: '#fff' }}
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => handleExcluir(aluno.id)}
-                  style={{ backgroundColor: '#e74c3c', color: '#fff' }}
-                >
-                  Excluir
-                </button>
-              </td>
-            </tr>
-          ))}
+          {Array.isArray(alunos) && alunos.map((aluno) => {
+            // Mapeamento com fallbacks para evitar exibir traço (-) se o dado existir
+            const turmaExibida =
+              aluno.turma ??
+              aluno.numeroTurma ??
+              aluno.codigoTurma ??
+              aluno.classNum ??
+              '-';
+
+            const idCursoExibido =
+              aluno.cursoId ??
+              aluno.curso?.id ??
+              aluno.idCurso ??
+              '-';
+
+            return (
+              <tr key={aluno.id}>
+                <td>{aluno.id}</td>
+                <td>{aluno.nome}</td>
+                <td>{aluno.matricula}</td>
+                <td>{aluno.turno || '-'}</td>
+                <td>{turmaExibida}</td>
+                <td>{idCursoExibido}</td>
+                <td style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => handleIniciarEdicao(aluno)}
+                    style={{ backgroundColor: '#f39c12', color: '#fff' }}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleExcluir(aluno.id)}
+                    style={{ backgroundColor: '#e74c3c', color: '#fff' }}
+                  >
+                    Excluir
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
