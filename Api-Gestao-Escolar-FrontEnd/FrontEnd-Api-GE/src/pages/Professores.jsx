@@ -11,7 +11,6 @@ export function Professores() {
   async function carregarProfessores() {
     try {
       const response = await api.get('/professores');
-      // Trata retorno caso seja Array direto ou objeto paginado do Spring Boot
       const dados = Array.isArray(response.data) 
         ? response.data 
         : (response.data?.content || []);
@@ -41,8 +40,13 @@ export function Professores() {
       carregarProfessores();
       alert('Professor cadastrado com sucesso!');
     } catch (error) {
-      console.error('Erro ao cadastrar professor:', error);
-      alert('Erro ao cadastrar professor. Verifique os dados enviados.');
+      console.error('Erro detalhado:', error.response?.data);
+      
+      const mensagemErro = error.response?.data?.message 
+        || error.response?.data 
+        || 'Conflito de dados no servidor.';
+
+      alert(`Erro 409 (Conflito): ${typeof mensagemErro === 'object' ? JSON.stringify(mensagemErro) : mensagemErro}`);
     }
   }
 
