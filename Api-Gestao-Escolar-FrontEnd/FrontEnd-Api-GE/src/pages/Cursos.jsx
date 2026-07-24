@@ -15,6 +15,12 @@ export function Cursos() {
   const [numeroAlunos, setNumeroAlunos] = useState('0');
   const [professorId, setProfessorId] = useState('');
 
+  // Estado local para salvar os dados complementares (Matéria / Professor) que o Spring Boot oculta
+  const [dadosLocais, setDadosLocais] = useState(() => {
+    const salvo = localStorage.getItem('@EduCore:dadosCursos');
+    return salvo ? JSON.parse(salvo) : {};
+  });
+
   // 1. Carrega Cursos
   async function carregarCursos() {
     try {
@@ -65,32 +71,28 @@ export function Cursos() {
     setNome(curso.nome || '');
     setArea(curso.area || '');
     setCargaHoraria(curso.cargaHoraria ? String(curso.cargaHoraria) : '');
-    setNumeroAlunos(String(curso.numeroAlunos ?? curso.qtdAlunos ?? curso.alunosCount ?? 0));
+    setNumeroAlunos(String(curso.numeroAlunos ?? curso.qtdAlunos ?? 0));
     
-    // Vincula o ID do professor
-    const idProf = curso.professor?.id || curso.professorId || '';
+    // Tenta resgatar dados da API ou do cache local
+    const local = dadosLocais[curso.id] || {};
+    const idProf = curso.professor?.id || curso.professorId || local.professorId || '';
     setProfessorId(String(idProf));
 
-    // Pega a matéria (do curso ou do professor)
-    const mat = curso.materia || curso.disciplina || curso.professor?.materia || '';
+    const mat = curso.materia || curso.disciplina || local.materia || '';
     setMateriaInput(mat);
   }
 
   async function handleSalvar(e) {
     e.preventDefault();
 
-    if (!professorId) {
-      alert('Por favor, selecione um professor para o curso.');
-      return;
-    }
-
     const qtdAlunos = Number(numeroAlunos) || 0;
     const horas = Number(cargaHoraria) || 0;
-    const profIdNum = Number(professorId);
+    const profIdNum = professorId ? Number(professorId) : null;
 
-    // Encontra o professor selecionado no estado para extrair a matéria caso o input esteja vazio
-    const profSelecionado = professores.find(p => p.id === profIdNum);
+    // Acha o professor selecionado
+    const profSelecionado = professores.find(p => String(p.id) === String(professorId));
     const materiaFinal = materiaInput.trim() || profSelecionado?.materia || '';
+    const nomeProfessorFinal = profSelecionado?.nome || '';
 
     const payload = {
       nome: nome.trim(),
@@ -99,30 +101,42 @@ export function Cursos() {
       area: area.trim(),
       cargaHoraria: horas,
       numeroAlunos: qtdAlunos,
-      alunosCount: qtdAlunos,
       professorId: profIdNum,
-      professor: { id: profIdNum }
+      professor: profIdNum ? { id: profIdNum } : null
     };
 
     try {
+      let cursoIdTarget = idEditando;
+
       if (idEditando) {
         await api.put(`/cursos/${idEditando}`, payload);
         alert('Curso atualizado com sucesso!');
       } else {
-        await api.post('/cursos', payload);
+        const response = await api.post('/cursos', payload);
+        cursoIdTarget = response.data?.id;
         alert('Curso cadastrado com sucesso!');
+      }
+
+      // Salva no localStorage para garantir a exibição no Front mesmo se o Back omitir
+      if (cursoIdTarget || idEditando) {
+        const target = cursoIdTarget || idEditando;
+        const novosDadosLocais = {
+          ...dadosLocais,
+          [target]: {
+            materia: materiaFinal,
+            professorId: professorId,
+            nomeProfessor: nomeProfessorFinal
+          }
+        };
+        setDadosLocais(novosDadosLocais);
+        localStorage.setItem('@EduCore:dadosCursos', JSON.stringify(novosDadosLocais));
       }
 
       limparFormulario();
       carregarCursos();
     } catch (error) {
-      console.error('Erro detalhado:', error.response?.data);
-      const mensagemErro = error.response?.data?.Mensagem 
-        || error.response?.data?.message 
-        || error.response?.data 
-        || 'Erro ao salvar curso.';
-
-      alert(`Erro: ${typeof mensagemErro === 'object' ? JSON.stringify(mensagemErro) : mensagemErro}`);
+      console.error('Erro ao salvar curso:', error);
+      alert('Erro ao salvar curso.');
     }
   }
 
@@ -130,6 +144,13 @@ export function Cursos() {
     if (window.confirm('Tem certeza que deseja excluir este curso?')) {
       try {
         await api.delete(`/cursos/${id}`);
+        
+        // Remove do cache local
+        const novosDados = { ...dadosLocais };
+        delete novosDados[id];
+        setDadosLocais(novosDados);
+        localStorage.setItem('@EduCore:dadosCursos', JSON.stringify(novosDados));
+
         alert('Curso excluído com sucesso!');
         carregarCursos();
       } catch (error) {
@@ -186,8 +207,8 @@ export function Cursos() {
             required
           />
 
-          <select value={professorId} onChange={(e) => setProfessorId(e.target.value)} required>
-            <option value="">Selecione um Professor (Obrigatório)...</option>
+          <select value={professorId} onChange={(e) => setProfessorId(e.target.value)}>
+            <option value="">Selecione um Professor...</option>
             {professores.map((prof) => (
               <option key={prof.id} value={prof.id}>
                 {prof.nome} ({prof.materia || 'Geral'})
@@ -227,26 +248,23 @@ export function Cursos() {
         </thead>
         <tbody>
           {Array.isArray(cursos) && cursos.map((curso) => {
-            // Busca o professor no objeto retornado ou cruza com a lista de professores do estado
-            const profObj = curso.professor || professores.find(p => p.id === curso.professorId);
-            
+            const cache = dadosLocais[curso.id] || {};
+
+            // Busca do Objeto, do Estado de Professores ou do Cache Local
+            const profObj = curso.professor || professores.find(p => String(p.id) === String(curso.professorId || cache.professorId));
+
             const nomeProfessor =
               profObj?.nome ||
               curso.nomeProfessor ||
-              (typeof curso.professor === 'string' ? curso.professor : null) ||
+              cache.nomeProfessor ||
               '-';
 
             const materiaExibida =
               curso.materia ||
               curso.disciplina ||
               profObj?.materia ||
+              cache.materia ||
               '-';
-
-            const qtdAlunosExibida =
-              curso.numeroAlunos ??
-              curso.qtdAlunos ??
-              curso.alunosCount ??
-              0;
 
             return (
               <tr key={curso.id}>
@@ -255,7 +273,7 @@ export function Cursos() {
                 <td>{materiaExibida}</td>
                 <td>{curso.area || '-'}</td>
                 <td>{curso.cargaHoraria ? `${curso.cargaHoraria}h` : '-'}</td>
-                <td>{qtdAlunosExibida}</td>
+                <td>{curso.numeroAlunos ?? curso.qtdAlunos ?? 0}</td>
                 <td>{nomeProfessor}</td>
                 <td style={{ display: 'flex', gap: '8px' }}>
                   <button
