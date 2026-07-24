@@ -6,7 +6,6 @@ export function Cursos() {
   const [cursos, setCursos] = useState([]);
   const [idEditando, setIdEditando] = useState(null);
 
-  // Estados dos campos do formulário
   const [nome, setNome] = useState('');
   const [materia, setMateria] = useState('');
   const [area, setArea] = useState('');
@@ -14,13 +13,17 @@ export function Cursos() {
   const [numeroAlunos, setNumeroAlunos] = useState('');
   const [professor, setProfessor] = useState('');
 
-  // Busca lista de cursos
   async function carregarCursos() {
     try {
       const response = await api.get('/cursos');
-      setCursos(response.data);
+      const dados = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.content || []);
+
+      setCursos(dados);
     } catch (error) {
       console.error('Erro ao buscar cursos:', error);
+      setCursos([]);
     }
   }
 
@@ -28,7 +31,6 @@ export function Cursos() {
     carregarCursos();
   }, []);
 
-  // Limpa o formulário e sai do modo de edição
   function limparFormulario() {
     setIdEditando(null);
     setNome('');
@@ -39,7 +41,6 @@ export function Cursos() {
     setProfessor('');
   }
 
-  // Preenche o formulário para edição
   function handleIniciarEdicao(curso) {
     setIdEditando(curso.id);
     setNome(curso.nome || '');
@@ -50,7 +51,6 @@ export function Cursos() {
     setProfessor(curso.professor || '');
   }
 
-  // Salvar (Cadastrar ou Atualizar)
   async function handleSalvar(e) {
     e.preventDefault();
 
@@ -65,11 +65,9 @@ export function Cursos() {
 
     try {
       if (idEditando) {
-        // Atualizar (PUT)
         await api.put(`/cursos/${idEditando}`, payload);
         alert('Curso atualizado com sucesso!');
       } else {
-        // Criar Novo (POST)
         await api.post('/cursos', payload);
         alert('Curso cadastrado com sucesso!');
       }
@@ -82,7 +80,6 @@ export function Cursos() {
     }
   }
 
-  // Excluir Curso (DELETE)
   async function handleExcluir(id) {
     if (window.confirm('Tem certeza que deseja apagar este curso?')) {
       try {
@@ -181,7 +178,7 @@ export function Cursos() {
           </tr>
         </thead>
         <tbody>
-          {cursos.map((curso) => (
+          {Array.isArray(cursos) && cursos.map((curso) => (
             <tr key={curso.id}>
               <td>{curso.id}</td>
               <td>{curso.nome}</td>

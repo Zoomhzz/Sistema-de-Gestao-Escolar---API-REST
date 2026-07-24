@@ -6,20 +6,23 @@ export function Alunos() {
   const [alunos, setAlunos] = useState([]);
   const [idEditando, setIdEditando] = useState(null);
 
-  // Estados dos campos do formulário
   const [nome, setNome] = useState('');
   const [matricula, setMatricula] = useState('');
   const [turno, setTurno] = useState('Manhã');
   const [turma, setTurma] = useState('');
   const [cursoId, setCursoId] = useState('');
 
-  // Busca lista de alunos
   async function carregarAlunos() {
     try {
       const response = await api.get('/alunos');
-      setAlunos(response.data);
+      const dados = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.content || []);
+
+      setAlunos(dados);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
+      setAlunos([]);
     }
   }
 
@@ -27,7 +30,6 @@ export function Alunos() {
     carregarAlunos();
   }, []);
 
-  // Limpa o formulário e sai do modo de edição
   function limparFormulario() {
     setIdEditando(null);
     setNome('');
@@ -37,7 +39,6 @@ export function Alunos() {
     setCursoId('');
   }
 
-  // Preenche o formulário para edição
   function handleIniciarEdicao(aluno) {
     setIdEditando(aluno.id);
     setNome(aluno.nome || '');
@@ -47,7 +48,6 @@ export function Alunos() {
     setCursoId(aluno.cursoId ? String(aluno.cursoId) : '');
   }
 
-  // Salvar (Cadastrar ou Atualizar)
   async function handleSalvar(e) {
     e.preventDefault();
 
@@ -61,11 +61,9 @@ export function Alunos() {
 
     try {
       if (idEditando) {
-        // Atualizar (PUT)
         await api.put(`/alunos/${idEditando}`, payload);
         alert('Aluno atualizado com sucesso!');
       } else {
-        // Criar Novo (POST)
         await api.post('/alunos', payload);
         alert('Aluno cadastrado com sucesso!');
       }
@@ -78,7 +76,6 @@ export function Alunos() {
     }
   }
 
-  // Excluir Aluno (DELETE)
   async function handleExcluir(id) {
     if (window.confirm('Tem certeza que deseja apagar este aluno?')) {
       try {
@@ -109,7 +106,7 @@ export function Alunos() {
 
         <input
           type="text"
-          placeholder="Matrícula"
+          placeholder="Matricular"
           value={matricula}
           onChange={(e) => setMatricula(e.target.value)}
           required
@@ -166,7 +163,7 @@ export function Alunos() {
           </tr>
         </thead>
         <tbody>
-          {alunos.map((aluno) => (
+          {Array.isArray(alunos) && alunos.map((aluno) => (
             <tr key={aluno.id}>
               <td>{aluno.id}</td>
               <td>{aluno.nome}</td>

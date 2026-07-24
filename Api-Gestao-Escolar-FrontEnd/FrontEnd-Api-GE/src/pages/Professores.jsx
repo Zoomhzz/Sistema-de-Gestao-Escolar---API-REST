@@ -11,9 +11,15 @@ export function Professores() {
   async function carregarProfessores() {
     try {
       const response = await api.get('/professores');
-      setProfessores(response.data);
+      // Trata retorno caso seja Array direto ou objeto paginado do Spring Boot
+      const dados = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.content || []);
+
+      setProfessores(dados);
     } catch (error) {
       console.error('Erro ao buscar professores:', error);
+      setProfessores([]);
     }
   }
 
@@ -84,7 +90,7 @@ export function Professores() {
         </div>
 
         <ul className="twitch-list">
-          {professores.map((prof) => (
+          {Array.isArray(professores) && professores.map((prof) => (
             <li key={prof.id} className="twitch-item">
               <div className="avatar-wrapper">
                 <img
