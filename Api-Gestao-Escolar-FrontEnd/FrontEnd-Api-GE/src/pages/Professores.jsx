@@ -27,14 +27,16 @@ export function Professores() {
       await api.post('/professores', {
         nome,
         materia,
-        alunosCount: Number(alunos) || 0
+        numeroAlunos: Number(alunos) || 0
       });
       setNome('');
       setMateria('');
       setAlunos('');
       carregarProfessores();
+      alert('Professor cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro ao cadastrar professor:', error);
+      alert('Erro ao cadastrar professor. Verifique os dados enviados.');
     }
   }
 
@@ -100,7 +102,7 @@ export function Professores() {
 
               <div className="twitch-viewers">
                 <span className="red-dot">🔴</span>
-                <span>{prof.alunosCount || prof.numeroAlunos || Math.floor(Math.random() * 50) + 10}</span>
+                <span>{prof.numeroAlunos || prof.alunosCount || Math.floor(Math.random() * 50) + 10}</span>
               </div>
             </li>
           ))}
