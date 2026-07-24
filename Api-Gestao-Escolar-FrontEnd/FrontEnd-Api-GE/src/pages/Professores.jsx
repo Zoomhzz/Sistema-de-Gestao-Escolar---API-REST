@@ -6,7 +6,7 @@ export function Professores() {
   const [professores, setProfessores] = useState([]);
   const [nome, setNome] = useState('');
   const [materia, setMateria] = useState('');
-  const [alunos, setAlunos] = useState('0'); // Inicializa como '0' em vez de string vazia
+  const [alunos, setAlunos] = useState('0');
 
   async function carregarProfessores() {
     try {
@@ -29,15 +29,19 @@ export function Professores() {
   async function handleCadastrar(e) {
     e.preventDefault();
 
-    // Garante que o valor convertido seja SEMPRE um número válido (double/number)
     const valorNum = Number(alunos);
     const qtdAlunos = isNaN(valorNum) ? 0 : valorNum;
 
+    // Payload com fallbacks numéricos para cobrir tipos primitivos 'double' no Spring
     const payload = {
       nome: nome.trim(),
       materia: materia.trim(),
       numeroAlunos: qtdAlunos,
-      alunosCount: qtdAlunos
+      alunosCount: qtdAlunos,
+      salario: 0.0,
+      cargaHoraria: 0.0,
+      horas: 0.0,
+      avaliacao: 0.0
     };
 
     try {
@@ -60,6 +64,7 @@ export function Professores() {
 
   return (
     <div className="professores-layout">
+      {/* Formulário de Cadastro */}
       <div className="container" style={{ flex: 1 }}>
         <h2>👨‍🏫 Gestão de Professores</h2>
 
@@ -94,6 +99,7 @@ export function Professores() {
         </form>
       </div>
 
+      {/* Sidebar estilo Twitch */}
       <aside className="twitch-sidebar">
         <div className="twitch-header">
           <span>Professores em aula</span>
