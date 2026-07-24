@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import './Alunos.css'; // Ajuste o nome do CSS se necessário
+import './Alunos.css';
 
 export function Alunos() {
   const [alunos, setAlunos] = useState([]);
@@ -20,7 +20,6 @@ export function Alunos() {
         ? response.data
         : (response.data?.content || []);
 
-      console.log('Dados de Alunos recebidos:', dados); // Para depuração no F12
       setAlunos(dados);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
@@ -57,7 +56,6 @@ export function Alunos() {
       nome: nome.trim(),
       matricula: matricula.trim(),
       turno: turno,
-      // Mapeia variações comuns que a API pode exigir
       turma: turma,
       numeroTurma: turma,
       codigoTurma: turma,
@@ -104,7 +102,6 @@ export function Alunos() {
     <div className="container" style={{ padding: '20px' }}>
       <h2>🎓 Gestão de Alunos</h2>
 
-      {/* Formulário de Cadastro / Edição */}
       <form onSubmit={handleSalvar} className="form-card" style={{ marginBottom: '20px' }}>
         <h3>{idEditando ? '✏️ Editar Aluno' : '➕ Novo Aluno'}</h3>
 
@@ -164,7 +161,6 @@ export function Alunos() {
         </div>
       </form>
 
-      {/* Tabela de Alunos */}
       <table>
         <thead>
           <tr>
@@ -179,18 +175,15 @@ export function Alunos() {
         </thead>
         <tbody>
           {Array.isArray(alunos) && alunos.map((aluno) => {
-            // Mapeamento com fallbacks para evitar exibir traço (-) se o dado existir
             const turmaExibida =
               aluno.turma ??
               aluno.numeroTurma ??
               aluno.codigoTurma ??
-              aluno.classNum ??
               '-';
 
             const idCursoExibido =
               aluno.cursoId ??
               aluno.curso?.id ??
-              aluno.idCurso ??
               '-';
 
             return (

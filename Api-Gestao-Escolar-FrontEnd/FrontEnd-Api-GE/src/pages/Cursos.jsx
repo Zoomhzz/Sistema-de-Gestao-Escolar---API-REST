@@ -15,6 +15,7 @@ export function Cursos() {
   const [numeroAlunos, setNumeroAlunos] = useState('0');
   const [professorId, setProfessorId] = useState('');
 
+  // 1. Carrega Cursos
   async function carregarCursos() {
     try {
       const response = await api.get('/cursos');
@@ -29,6 +30,7 @@ export function Cursos() {
     }
   }
 
+  // 2. Carrega Professores
   async function carregarProfessores() {
     try {
       const response = await api.get('/professores');
@@ -65,11 +67,11 @@ export function Cursos() {
     setCargaHoraria(curso.cargaHoraria ? String(curso.cargaHoraria) : '');
     setNumeroAlunos(String(curso.numeroAlunos ?? curso.qtdAlunos ?? curso.alunosCount ?? 0));
     
-    // Tenta pegar o ID do professor ou do objeto professor
+    // Vincula o ID do professor
     const idProf = curso.professor?.id || curso.professorId || '';
     setProfessorId(String(idProf));
 
-    // Se houver matéria no curso ou no professor
+    // Pega a matéria (do curso ou do professor)
     const mat = curso.materia || curso.disciplina || curso.professor?.materia || '';
     setMateriaInput(mat);
   }
@@ -77,11 +79,16 @@ export function Cursos() {
   async function handleSalvar(e) {
     e.preventDefault();
 
+    if (!professorId) {
+      alert('Por favor, selecione um professor para o curso.');
+      return;
+    }
+
     const qtdAlunos = Number(numeroAlunos) || 0;
     const horas = Number(cargaHoraria) || 0;
-    const profIdNum = professorId ? Number(professorId) : null;
+    const profIdNum = Number(professorId);
 
-    // Se um professor foi selecionado, podemos pegar a matéria dele
+    // Encontra o professor selecionado no estado para extrair a matéria caso o input esteja vazio
     const profSelecionado = professores.find(p => p.id === profIdNum);
     const materiaFinal = materiaInput.trim() || profSelecionado?.materia || '';
 
@@ -94,7 +101,7 @@ export function Cursos() {
       numeroAlunos: qtdAlunos,
       alunosCount: qtdAlunos,
       professorId: profIdNum,
-      professor: profIdNum ? { id: profIdNum } : null
+      professor: { id: profIdNum }
     };
 
     try {
@@ -180,10 +187,10 @@ export function Cursos() {
           />
 
           <select value={professorId} onChange={(e) => setProfessorId(e.target.value)} required>
-            <option value="">Selecione um Professor...</option>
+            <option value="">Selecione um Professor (Obrigatório)...</option>
             {professores.map((prof) => (
               <option key={prof.id} value={prof.id}>
-                {prof.nome} ({prof.materia || 'Sem Matéria'})
+                {prof.nome} ({prof.materia || 'Geral'})
               </option>
             ))}
           </select>
@@ -220,19 +227,19 @@ export function Cursos() {
         </thead>
         <tbody>
           {Array.isArray(cursos) && cursos.map((curso) => {
-            // Busca o nome do professor
+            // Busca o professor no objeto retornado ou cruza com a lista de professores do estado
+            const profObj = curso.professor || professores.find(p => p.id === curso.professorId);
+            
             const nomeProfessor =
-              curso.professor?.nome ||
+              profObj?.nome ||
               curso.nomeProfessor ||
-              professores.find(p => p.id === curso.professorId || p.id === curso.professor?.id)?.nome ||
+              (typeof curso.professor === 'string' ? curso.professor : null) ||
               '-';
 
-            // Busca a matéria (no curso ou no objeto do professor)
             const materiaExibida =
               curso.materia ||
               curso.disciplina ||
-              curso.professor?.materia ||
-              professores.find(p => p.id === curso.professorId || p.id === curso.professor?.id)?.materia ||
+              profObj?.materia ||
               '-';
 
             const qtdAlunosExibida =
