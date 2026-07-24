@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import './Cursos.css'; // Ajuste a importação do CSS caso o nome seja diferente
+import './Cursos.css';
 
 export function Cursos() {
   const [cursos, setCursos] = useState([]);
@@ -15,7 +15,7 @@ export function Cursos() {
   const [numeroAlunos, setNumeroAlunos] = useState('0');
   const [professorId, setProfessorId] = useState('');
 
-  // 1. Carrega a lista de Cursos
+  // 1. Carrega Cursos
   async function carregarCursos() {
     try {
       const response = await api.get('/cursos');
@@ -23,7 +23,7 @@ export function Cursos() {
         ? response.data
         : (response.data?.content || []);
 
-      console.log('Dados de Cursos recebidos:', dados); // Para depuração no F12
+      console.log('Dados de Cursos recebidos:', dados);
       setCursos(dados);
     } catch (error) {
       console.error('Erro ao buscar cursos:', error);
@@ -31,7 +31,7 @@ export function Cursos() {
     }
   }
 
-  // 2. Carrega a lista de Professores para preencher o <select>
+  // 2. Carrega Professores
   async function carregarProfessores() {
     try {
       const response = await api.get('/professores');
@@ -64,7 +64,7 @@ export function Cursos() {
   function handleIniciarEdicao(curso) {
     setIdEditando(curso.id);
     setNome(curso.nome || '');
-    setMateria(curso.materia || curso.disciplina || '');
+    setMateria(curso.materia || curso.disciplina || curso.nomeMateria || '');
     setArea(curso.area || '');
     setCargaHoraria(curso.cargaHoraria ? String(curso.cargaHoraria) : '');
     setNumeroAlunos(String(curso.numeroAlunos ?? curso.qtdAlunos ?? curso.alunosCount ?? 0));
@@ -77,14 +77,16 @@ export function Cursos() {
     const qtdAlunos = Number(numeroAlunos) || 0;
     const horas = Number(cargaHoraria) || 0;
 
+    // Envia todas as variações de chaves comuns no Spring Boot
     const payload = {
       nome: nome.trim(),
       materia: materia.trim(),
+      disciplina: materia.trim(),
+      nomeMateria: materia.trim(),
       area: area.trim(),
       cargaHoraria: horas,
       numeroAlunos: qtdAlunos,
       alunosCount: qtdAlunos,
-      // Envia o ID do professor associado (se houver)
       professorId: professorId ? Number(professorId) : null,
       professor: professorId ? { id: Number(professorId) } : null
     };
@@ -125,7 +127,7 @@ export function Cursos() {
   }
 
   return (
-    <div className="cursos-container" style={{ padding: '20px' }}>
+    <div className="container" style={{ padding: '20px' }}>
       <h2>📚 Gestão de Cursos</h2>
 
       {/* Formulário de Cadastro / Edição */}
@@ -215,16 +217,19 @@ export function Cursos() {
         </thead>
         <tbody>
           {Array.isArray(cursos) && cursos.map((curso) => {
-            // Tratamento das informações com Fallbacks caso venha nulo/diferente
-            const nomeProfessor =
-              curso.professor?.nome ||
-              curso.nomeProfessor ||
-              (typeof curso.professor === 'string' ? curso.professor : null) ||
-              '-';
-
+            // Mapeamento extensivo para capturar qualquer nome retornado pelo backend
             const materiaExibida =
               curso.materia ||
               curso.disciplina ||
+              curso.nomeMateria ||
+              curso.materiaNome ||
+              '-';
+
+            const nomeProfessor =
+              curso.professor?.nome ||
+              curso.nomeProfessor ||
+              curso.professorNome ||
+              (typeof curso.professor === 'string' ? curso.professor : null) ||
               '-';
 
             const qtdAlunosExibida =
